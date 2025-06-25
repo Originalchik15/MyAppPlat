@@ -1,6 +1,3 @@
-// =======================================================
-// ТВОЙ ИЗНАЧАЛЬНЫЙ КОД (НЕ ИЗМЕНЕН)
-// =======================================================
 import {mlog,say,test} from './vendor/logs.js'
 import { format } from 'date-fns';
 
@@ -83,9 +80,6 @@ app.post('/datas', async (req, res) => {
 
 
 
-// ===================================================================
-// НОВЫЙ КОД, КОТОРЫЙ МЫ ДОБАВЛЯЕМ ПЕРЕД ЗАПУСКОМ СЕРВЕРА
-// ===================================================================
 
 const isAuth = (req, res, next) => {
     if (req.session.uid) return next();
@@ -100,7 +94,7 @@ const hasRole = (role) => {
     };
 };
 
-// --- РОУТЫ АУТЕНТИФИКАЦИИ ---
+// логин-
 app.get('/login', (req, res) => {
     res.render('login', { title: 'Авторизация', layout: 'main' });
 });
@@ -132,7 +126,7 @@ app.get('/logout', (req, res) => {
     });
 });
 
-// --- РОУТЫ ДЛЯ ПОЛЬЗОВАТЕЛЯ (role: user) ---
+// юзерка
 app.get('/user', isAuth, hasRole('user'), async (req, res) => {
     const applications = await db.query('SELECT *, DATE_FORMAT(desired_date, "%d.%m.%Y") AS desired_date_f, DATE_FORMAT(creation_date, "%d.%m.%Y") AS creation_date_f FROM applications WHERE user_id = ? ORDER BY id DESC', [req.session.uid]);
     res.render('user_page', { title: 'Страница пользователя', name: req.session.name, applications: applications });
@@ -153,7 +147,7 @@ app.post('/applications/:id/clone', isAuth, hasRole('user'), async (req, res) =>
     res.redirect('/user');
 });
 
-// --- РОУТЫ ДЛЯ АДМИНА (role: admin) ---
+// админка
 app.get('/admin', isAuth, hasRole('admin'), async (req, res) => {
     const applications = await db.query("SELECT a.*, u.username, DATE_FORMAT(a.desired_date, '%d.%m.%Y') AS desired_date_f, DATE_FORMAT(a.creation_date, '%d.%m.%Y') AS creation_date_f FROM applications a JOIN users u ON a.user_id = u.id WHERE a.status != 'Завершен' ORDER BY a.id DESC");
     res.render('admin_page', { title: 'Страница администратора', name: req.session.name, applications: applications });
@@ -176,7 +170,7 @@ app.get('/archive', isAuth, hasRole('admin'), async (req, res) => {
     res.render('archive_page', { title: 'Архив заказов', applications: applications });
 });
 
-// Новый обработчик для app.get('/') который ПЕРЕНАПРАВЛЯЕТ, а не рендерит
+
 app.get('/', (req, res) => {
     if (req.session.uid) {
         if (req.session.roles.includes('admin')) return res.redirect('/admin');
@@ -185,9 +179,7 @@ app.get('/', (req, res) => {
     res.redirect('/login');
 });
 
-// =======================================================
-// ТВОЙ ИЗНАЧАЛЬНЫЙ КОД ДЛЯ ЗАПУСКА (НЕ ИЗМЕНЕН)
-// =======================================================
+
 async function start(){
     app.listen(process.env.PORT, ()=> {
         mlog('Сервер прогресса репорта - запущен')
