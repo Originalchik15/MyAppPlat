@@ -94,7 +94,7 @@ const hasRole = (role) => {
     };
 };
 
-// логин-
+// логин
 app.get('/login', (req, res) => {
     res.render('login', { title: 'Авторизация', layout: 'main' });
 });
