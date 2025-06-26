@@ -1,1 +1,23 @@
-<h1>Login Page</h1>
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h3 class="mb-4 text-center">Вход</h3>
+        {{#if error}}
+          <div class="alert alert-danger py-2">{{error}}</div>
+        {{/if}}
+        <form method="POST" action="/login">
+          <div class="mb-3">
+            <label class="form-label">Логин</label>
+            <input type="text" name="login" class="form-control" required autofocus />
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Пароль</label>
+            <input type="password" name="password" class="form-control" required />
+          </div>
+          <button class="btn btn-primary w-100" type="submit">Войти</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

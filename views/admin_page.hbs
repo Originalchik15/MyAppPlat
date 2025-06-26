@@ -1,0 +1,66 @@
+<h2 class="mb-4 d-flex justify-content-between align-items-center">
+  <span>Активные заявки</span>
+  <form class="d-flex" method="GET" action="/admin">
+    <select name="status" class="form-select form-select-sm me-2">
+      <option value="Все" {{#if (eq filter 'Все')}}selected{{/if}}>Все заказы</option>
+      {{#each @root.statuses}}
+        {{#unless (eq this 'Получено')}}{{!-- «Получено» и «Отмена» в архиве --}}
+          <option value="{{this}}" {{#if (eq this ../filter)}}selected{{/if}}>{{this}}</option>
+        {{/unless}}
+      {{/each}}
+    </select>
+    <button class="btn btn-outline-light btn-sm" type="submit">Фильтр</button>
+  </form>
+</h2>
+<table class="table table-bordered table-hover align-middle shadow-sm">
+  <thead class="table-dark align-middle text-center">
+    <tr>
+      <th>ID</th>
+      <th>Пользователь</th>
+      <th>Товар</th>
+      <th>Кол-во</th>
+      <th>Цена</th>
+      <th>Ссылка</th>
+      <th>Желаемая дата</th>
+      <th>Предполагаемая дата</th>
+      <th>Создана</th>
+      <th style="width:150px;">Статус</th>
+      <th style="width:220px;">Комментарий</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each applications}}
+      <tr>
+        <form method="POST" action="/applications/{{id}}/update" class="align-middle">
+          <td>{{id}}</td>
+          <td>{{username}}</td>
+          <td>{{product_name}}</td>
+          <td>{{quantity}}</td>
+          <td>{{price}}</td>
+          <td>{{#if link}}<a href="{{link}}" target="_blank">ссылка</a>{{/if}}</td>
+          <td>{{desired_date_f}}</td>
+          <td>
+            <input type="date" name="expected_delivery" class="form-control form-control-sm" value="{{expected_delivery_f}}" />
+          </td>
+          <td>{{creation_date_f}}</td>
+          <td>
+            <select name="status" class="form-select form-select-sm">
+              {{#each @root.statuses}}
+                <option value="{{this}}" {{#if (eq this ../status)}}selected{{/if}}>{{this}}</option>
+              {{/each}}
+            </select>
+          </td>
+          <td>
+            <input type="text" name="manager_comment" class="form-control form-control-sm" value="{{manager_comment}}" placeholder="Комментарий" />
+          </td>
+          <td class="text-center">
+            <button class="btn btn-primary btn-sm" type="submit">✓</button>
+          </td>
+        </form>
+      </tr>
+    {{else}}
+      <tr><td colspan="12" class="text-center py-4">Активных заявок нет</td></tr>
+    {{/each}}
+  </tbody>
+</table>
