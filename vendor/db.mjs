@@ -1,7 +1,7 @@
 import mysql from 'mysql2/promise';
 import 'dotenv/config';
 
-/* ─── соединение ─────────────────────────────────────────────────────────── */
+
 const pool = mysql.createPool({
   host:     process.env.DB_HOST,
   user:     process.env.DB_USER,
@@ -13,13 +13,13 @@ const pool = mysql.createPool({
   queueLimit         : 0,
 });
 
-/* ─── универсальный метод (если вдруг понадобится сырой sql) ─────────────── */
+
 export async function query(sql, params = []) {
   const [rows] = await pool.execute(sql, params);
   return rows;
 }
 
-/* ─── прикладные запросы (используем в tablica.js) ───────────────────────── */
+
 export async function getUserByCredentials(username, password) {
   const [user] = await query(
     'SELECT * FROM users WHERE username = ? AND password = ?',

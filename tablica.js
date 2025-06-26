@@ -1,6 +1,3 @@
-/******************************************************************
- * tablica.js – главный сервер (Express + Handlebars + MySQL)
- ******************************************************************/
 import express            from 'express';
 import exphbs             from 'express-handlebars';
 import fileUpload         from 'express-fileupload';
@@ -12,14 +9,14 @@ import 'dotenv/config';
 import { mlog, test }     from './vendor/logs.js';
 
 import {
-  query,                      // добавили «сырой» запрос
+  query,                      
   getUserByCredentials,
   getApplicationsByUserId,
   createApplication,
   getAllUsers,
 } from './vendor/db.mjs';
 
-/* ─── константы ─────────────────────────────────────────────── */
+
 const STATUSES = [
   'На рассмотрении',
   'Закупаем',
@@ -31,13 +28,13 @@ const STATUSES = [
 ];
 const ARCHIVE_STATUSES = ['Отмена', 'Получено'];
 
-/* ─── __dirname для ESM ────────────────────────────────────── */
+
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 const TEMPFOLDER = path.join(__dirname, 'public', 'temp');
 
-/* ─── Express + Handlebars ─────────────────────────────────── */
+
 const app = express();
 
 const hbs = exphbs.create({
@@ -60,7 +57,7 @@ if (test) {
   app.set('views', path.join('//', __dirname, 'views'));
 }
 
-/* ─── middlewares ─────────────────────────────────────────── */
+
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -82,7 +79,6 @@ app.use(fileUpload({
 
 process.on('uncaughtException', err => mlog('Критическая ошибка!', err.stack));
 
-/* ─── auth helpers ─────────────────────────────────────────── */
 const isAuth  = (req, res, next) => (req.session.uid ? next() : res.redirect('/login'));
 const hasRole = role => (req, res, next) => {
   if (!req.session.uid) return res.redirect('/login');
@@ -90,11 +86,6 @@ const hasRole = role => (req, res, next) => {
   res.status(403).send('Доступ запрещён');
 };
 
-/* ─────────────────────────────────────────────────────────────
- *  Р О У Т Ы
- *─────────────────────────────────────────────────────────────*/
-
-/* --- логин -------------------------------------------------- */
 app.get('/login', (req,res)=>res.render('login',{title:'Авторизация'}));
 
 app.post('/login', async (req,res)=>{
@@ -119,14 +110,14 @@ app.post('/login', async (req,res)=>{
 
 app.get('/logout',(req,res)=>req.session.destroy(()=>res.redirect('/login')));
 
-/* --- страница пользователя --------------------------------- */
+
 app.get('/user', isAuth, hasRole('user'), async (req,res)=>{
   const applications=await getApplicationsByUserId(req.session.uid);
   const today=new Date().toISOString().split('T')[0];
   res.render('user_page',{title:'Страница пользователя',name:req.session.name,applications,role:'user',today});
 });
 
-app.post('/applications/create', isAuth, hasRole('user'), async (req,res)=>{
+app.post('/create', isAuth, hasRole('user'), async (req,res)=>{
   try{
     await createApplication(req.session.uid, req.body);
     res.redirect('/user');
@@ -136,18 +127,15 @@ app.post('/applications/create', isAuth, hasRole('user'), async (req,res)=>{
   }
 });
 
-/* отмена заявки пользователем */
-app.post('/applications/:id/cancel', isAuth, hasRole('user'), async (req,res)=>{
+app.post('/:id/cancel', isAuth, hasRole('user'), async (req,res)=>{
   await query('UPDATE applications SET status = ?, manager_comment = ? WHERE id = ?', ['Отмена','Отменено пользователем',req.params.id]);
   res.redirect('/user');
 });
 
-/* --- админ -------------------------------------------------- */
 app.get('/admin', isAuth, hasRole('admin'), async (req,res)=>{
   const filter = req.query.status || 'Все';
   const sqlBase = `SELECT a.*, u.username, DATE_FORMAT(a.desired_date,'%d.%m.%Y') AS desired_date_f, DATE_FORMAT(a.creation_date,'%d.%m.%Y') AS creation_date_f, DATE_FORMAT(a.expected_delivery,'%d.%m.%Y') AS expected_delivery_f FROM applications a JOIN users u ON a.user_id = u.id`;
 
-  // условие: все, кроме архивных статусов
   let where = `WHERE a.status NOT IN (?, ?)`;
   let params = [...ARCHIVE_STATUSES];
 
@@ -173,7 +161,7 @@ app.get('/admin/users', isAuth, hasRole('admin'), async (req,res)=>{
   res.render('users_database',{title:'База пользователей',users,role:'admin'});
 });
 
-app.post('/applications/:id/update', isAuth, hasRole('admin'), async (req,res)=>{
+app.post('/:id/update', isAuth, hasRole('admin'), async (req,res)=>{
   const {id}=req.params;
   let {status,manager_comment,expected_delivery}=req.body;
   if(typeof status==='undefined') status=null;
@@ -184,19 +172,18 @@ app.post('/applications/:id/update', isAuth, hasRole('admin'), async (req,res)=>
   res.redirect('/admin');
 });
 
-/* --- архив -------------------------------------------------- */
+
 app.get('/archive', isAuth, hasRole('admin'), async (req,res)=>{
   const applications = await query(`SELECT a.*, u.username, (a.quantity * a.price) AS total_cost, DATE_FORMAT(a.desired_date, '%d.%m.%Y') AS desired_date_f, DATE_FORMAT(a.creation_date,'%d.%m.%Y') AS creation_date_f, DATE_FORMAT(a.expected_delivery,'%d.%m.%Y') AS expected_delivery_f FROM applications a JOIN users u ON a.user_id = u.id WHERE a.status IN (?, ?) ORDER BY a.id DESC`, ARCHIVE_STATUSES);
   res.render('archive_page',{title:'Архив заказов',applications,role:'admin'});
 });
 
-/* --- корневой редирект ------------------------------------- */
+
 app.get('/',(req,res)=>{
   if(!req.session.uid) return res.redirect('/login');
   if(req.session.roles.includes('admin')) return res.redirect('/admin');
   res.redirect('/user');
 });
 
-/* ─── запуск ──────────────────────────────────────────────── */
 const PORT=process.env.PORT||3000;
 app.listen(PORT,()=>mlog('Сервер запущен. Порт:',PORT));
