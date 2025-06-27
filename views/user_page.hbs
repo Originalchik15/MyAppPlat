@@ -1,7 +1,7 @@
 <h2 class="mb-4">Новая заявка</h2>
 <div class="card shadow-sm mb-5">
   <div class="card-body">
-    <form class="row g-3" method="POST" action="/applications/create">
+    <form class="row g-3" method="POST" action="/create">
       <div class="col-md-4">
         <label class="form-label">Наименование товара</label>
         <input type="text" name="productName" class="form-control" required />
@@ -29,44 +29,44 @@
   </div>
 </div>
 
-<h2 class="mb-3">Мои заявки</h2>
-<table class="table table-striped table-bordered align-middle shadow-sm">
-  <thead class="table-light">
+<h2 class="mb-4">Мои заявки</h2>
+<table class="table table-bordered table-hover align-middle shadow-sm">
+  <thead class="table-light text-center">
     <tr>
       <th>ID</th>
-      <th>Товар</th>
+      <th>Товар</th>          
       <th>Кол-во</th>
       <th>Цена</th>
-      <th>Ссылка</th>
       <th>Желаемая дата</th>
       <th>Создана</th>
       <th>Статус</th>
       <th>Комментарий менеджера</th>
-      <th>Действие</th>
+      <th style="width:70px;">Действие</th>
     </tr>
   </thead>
   <tbody>
     {{#each applications}}
       <tr>
         <td>{{id}}</td>
-        <td>{{product_name}}</td>
+        <td>
+          <a href="{{link}}" target="_blank">{{product_name}}</a>
+        </td>
         <td>{{quantity}}</td>
         <td>{{price}}</td>
-        <td>{{#if link}}<a href="{{link}}" target="_blank">ссылка</a>{{/if}}</td>
         <td>{{desired_date_f}}</td>
         <td>{{creation_date_f}}</td>
         <td>{{status}}</td>
         <td>{{manager_comment}}</td>
         <td class="text-center">
-          {{#if (and (ne status 'Завершен') (ne status 'Отмена'))}}
-            <form method="POST" action="/applications/{{id}}/cancel">
-              <button class="btn btn-outline-danger btn-sm" title="Отменить">✕</button>
+          {{#if (and (ne status 'Отклонена') (ne status 'Получено'))}}
+            <form method="POST" action="/{{id}}/cancel" class="d-inline">
+              <button type="submit" class="btn btn-outline-danger btn-sm" title="Отменить">✕</button>
             </form>
           {{/if}}
         </td>
       </tr>
     {{else}}
-      <tr><td colspan="10" class="text-center py-4">Заявок нет</td></tr>
+      <tr><td colspan="9" class="text-center py-4">Заявок нет</td></tr>
     {{/each}}
   </tbody>
 </table>

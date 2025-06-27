@@ -20,7 +20,6 @@
       <th>Товар</th>
       <th>Кол-во</th>
       <th>Цена</th>
-      <th>Ссылка</th>
       <th>Желаемая дата</th>
       <th>Предполагаемая дата</th>
       <th>Создана</th>
@@ -32,13 +31,12 @@
   <tbody>
     {{#each applications}}
       <tr>
-        <form method="POST" action="/applications/{{id}}/update" class="align-middle">
+        <form method="POST" action="/{{id}}/update" class="align-middle">
           <td>{{id}}</td>
           <td>{{username}}</td>
-          <td>{{product_name}}</td>
+          <td><a href="{{link}}" target="_blank">{{product_name}}</a></td>
           <td>{{quantity}}</td>
           <td>{{price}}</td>
-          <td>{{#if link}}<a href="{{link}}" target="_blank">ссылка</a>{{/if}}</td>
           <td>{{desired_date_f}}</td>
           <td>
             <input type="date" name="expected_delivery" class="form-control form-control-sm" value="{{expected_delivery_f}}" />
@@ -46,8 +44,10 @@
           <td>{{creation_date_f}}</td>
           <td>
             <select name="status" class="form-select form-select-sm">
-              {{#each @root.statuses}}
-                <option value="{{this}}" {{#if (eq this ../status)}}selected{{/if}}>{{this}}</option>
+              {{#each @root.statuses}}                          
+                <option value="{{this}}" {{#if (eq ../status this)}}selected{{/if}}>
+                  {{this}}
+                </option>
               {{/each}}
             </select>
           </td>
