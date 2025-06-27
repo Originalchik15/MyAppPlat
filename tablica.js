@@ -10,16 +10,8 @@ import path from 'path';
 import 'dotenv/config';
 
 import { mlog, test } from './vendor/logs.js';
-import {
-  getUserByCredentials,
-  getApplicationsByUserId,
-  createApplication,
-  cancelApplication,
-  getAdminApplications,
-  updateApplication,
-  getAllUsers,
-  getArchiveApplications,
-} from './vendor/db.mjs';
+
+import * as db from './vendor/db.mjs';
 
 /* статусы */
 export const STATUSES = [
@@ -90,7 +82,7 @@ app.get('/login', (req,res)=>res.render('login',{title:'Авторизация'}
 
 app.post('/login', async (req,res)=>{
   const {login,password}=req.body;
-  const user = await getUserByCredentials(login,password);
+  const user = await db.getUserByCredentials(login,password);
   if(!user) return res.render('login',{title:'Авторизация',error:'Неверный логин или пароль'});
 
   req.session.uid   = user.id;
@@ -103,43 +95,43 @@ app.get('/logout',(req,res)=>req.session.destroy(()=>res.redirect('/login')));
 
 /* пользователь */
 app.get('/user', isAuth, hasRole('user'), async (req,res)=>{
-  const applications = await getApplicationsByUserId(req.session.uid);
+  const applications = await db.getApplicationsByUserId(req.session.uid);
   const today = new Date().toISOString().split('T')[0];
   res.render('user_page',{title:'Страница пользователя',name:req.session.name,applications,role:'user',today});
 });
 
 app.post('/create', isAuth, hasRole('user'), async (req,res)=>{
-  await createApplication(req.session.uid, req.body);
+  await db.createApplication(req.session.uid, req.body);
   res.redirect('/user');
 });
 
 app.post('/:id/cancel', isAuth, hasRole('user'), async (req,res)=>{
-  await cancelApplication(req.params.id);
+  await db.cancelApplication(req.params.id);
   res.redirect('/user');
 });
 
 /* админ */
 app.get('/admin', isAuth, hasRole('admin'), async (req,res)=>{
   const filter = req.query.status || 'Все';
-  const applications = await getAdminApplications(filter);
+  const applications = await db.getAdminApplications(filter);
   res.render('admin_page',{title:'Страница администратора',name:req.session.name,applications,statuses:STATUSES,filterList:['Все',...FILTER_STATUSES],role:'admin',filter});
 });
 
 app.get('/admin/users', isAuth, hasRole('admin'), async (req,res)=>{
-  const users = await getAllUsers();
+  const users = await db.getAllUsers();
   res.render('users_database',{title:'База пользователей',users,role:'admin'});
 });
 
 app.post('/:id/update', isAuth, hasRole('admin'), async (req,res)=>{
   const {id}=req.params;
   const {status, manager_comment, expected_delivery=''} = req.body;
-  await updateApplication(id, status, manager_comment, expected_delivery || null);
+  await db.updateApplication(id, status, manager_comment, expected_delivery || null);
   res.redirect('/admin');
 });
 
 /* архив */
 app.get('/archive', isAuth, hasRole('admin'), async (req,res)=>{
-  const applications = await getArchiveApplications();
+  const applications = await db.getArchiveApplications();
   res.render('archive_page',{title:'Архив заказов',applications,role:'admin'});
 });
 
